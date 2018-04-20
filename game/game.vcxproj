@@ -148,7 +148,7 @@
   <ItemGroup>
     <ClCompile Include="Alien.cpp" />
     <ClCompile Include="game.cpp" />
-    <ClCompile Include="Missile.cpp" />
+    <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="Ship.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,7 +157,7 @@
   <ItemGroup>
     <ClInclude Include="Alien.h" />
     <ClInclude Include="GameManager.h" />
-    <ClInclude Include="Missile.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="Ship.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

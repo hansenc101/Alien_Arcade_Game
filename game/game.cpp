@@ -3,7 +3,9 @@
 #include "GameManager.h"
 #include "Alien.h"
 #include "Ship.h"
-#include "Missile.h"
+#include "Projectile.h"
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 #include <SFML/Graphics.hpp>
 using namespace sf; 
@@ -26,58 +28,98 @@ const int WINDOW_HEIGHT = 600;
 
 int main()
 {
-
 	RenderWindow window(VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "aliens!");
 	// Limit the framerate to 60 frames per second
 	window.setFramerateLimit(60);
-
+	GameManager game; // basically controls the whole game
 	// load textures from file into memory. This doesn't display anything yet.
 	// Notice we do this *before* going into animation loop.
-	
-	Texture starsTexture;
+	Texture starsTexture; // texture for background
 	if (!starsTexture.loadFromFile("stars.jpg"))
 	{
 		cout << "Unable to load stars texture!" << endl;
 		exit(EXIT_FAILURE);
 	}
-	
-	list<Missile> missiles;
-	list<Missile>::iterator missileIter;
-
-	list<Alien> aliens;
-	list<Alien>::iterator alienIter;
-	for (int i = 0; i < 10; i++)
+	Texture alienTexture; // texture for alien sprite
+	if (!alienTexture.loadFromFile("enemy.png"))
 	{
-		Vector2f pos;
-		pos.x = 20 + (75 * i );
-		Alien tempAlien(pos, i);
-		aliens.push_back(tempAlien);
+		cout << "Unable to load alien texture!" << endl;
+		exit(EXIT_FAILURE);
+	}
+	Texture alienTexture2; // texture for level 2 aliens
+	if (!alienTexture2.loadFromFile("enemy2.png"))
+	{
+		cout << "Unable to load alien texture!" << endl;
+		exit(EXIT_FAILURE);
 	}
 
+	Texture missileTexture; // texture for missile sprite
+	if (!missileTexture.loadFromFile("missile.png"))
+	{
+		cout << "Unable to load missile texture!" << endl;
+		exit(EXIT_FAILURE);
+	}
+	Texture bombTexture; // texture for bomb sprite
+	if (!bombTexture.loadFromFile("laser.png"))
+	{
+		cout << "Unable to load bomb texture!" << endl;
+		exit(EXIT_FAILURE);
+	}
 
 	Sprite background;
 	background.setTexture(starsTexture);
 	// The texture file is 640x480, so scale it up a little to cover 800x600 window
 	background.setScale(1.5, 1.5);
+	game.setupAliens(&alienTexture);
 
-	// create sprite and texture it
-	
-
-
-	// initial position of the ship will be approx middle of screen
-	Ship ship;
-	float shipX = window.getSize().x - 50;
-	float shipY = window.getSize().y - 50;
+	// initial position of the ship will be approx middle/bottom of screen
+	Ship ship; // ship instance
+	float shipX = window.getSize().x - 50; // initial x position of ship
+	float shipY = window.getSize().y - 50; // initial y position of ship
 	ship.setPosition(shipX, shipY);
 
-	GameManager game;
-
+	int counter = 0; // keep track of how many frames have passed
+	int maxValue = 10; // max number of aliens, used to decide which one will drop a bomb
+	int minValue = 1; // min number of aliens, used to decide which one will drop a bomb
+	int choice = 0; // first choice to determine which alien will drop a bomb
+	int choice2 = 0; // second choice to determine which alien will drop a bomb
+	unsigned seed = time(0); // get the system time
+	srand(seed); 
+	bool ready = false; // used to test to see if the player is ready or not
 
 	while (window.isOpen())
 	{
+		Event event;
+		counter++;
+		if (game.getLevel() == 1)
+		{
+			if (counter % 90 == 0)
+			{
+				choice = (rand() % (maxValue - minValue + 1)) + minValue;
+				choice2 = (rand() % (maxValue - minValue + 1)) + minValue;
+				game.bombsAway(choice, &bombTexture);
+				game.bombsAway(choice2, &bombTexture);
+				counter = 0;
+			}
+		}
+		else if (game.getLevel() == 2)
+		{
+			if (counter % 60 == 0)
+			{
+				choice = (rand() % (maxValue - minValue + 1)) + minValue;
+				choice2 = (rand() % (maxValue - minValue + 1)) + minValue;
+				game.bombsAway(choice, &bombTexture);
+				game.bombsAway(choice2, &bombTexture);
+				counter = 0;
+			}
+		}
+		
+		// draw background first, so everything that's drawn later 
+		// will appear on top of background
+		window.draw(background);
 		// check all the window's events that were triggered since the last iteration of the loop
 		// For now, we just need this so we can click on the window and close it
-		Event event;
+		
 
 		while (window.pollEvent(event))
 		{
@@ -89,74 +131,69 @@ int main()
 				if (event.key.code == Keyboard::Space)
 				{
 					// handle space bar
-					Missile tempMissile(ship.getPosition());
-					tempMissile.setPosition(ship.getPosition());
-					missiles.push_back(tempMissile);
+					game.launchMissile(ship.getPosition(), &missileTexture);
 				}
 				
 			}
 		}
 
-		//===========================================================
-		// Everything from here to the end of the loop is where you put your
-		// code to produce ONE frame of the animation. The next iteration of the loop will
-		// render the next frame, and so on. All this happens ~ 60 times/second.
-		//===========================================================
-
-		// draw background first, so everything that's drawn later 
-		// will appear on top of background
-		window.draw(background);
+		while (!ready)
+		{
+			if (game.getLevel() < 3 && game.getLives() > 0)
+			{
+				ready = game.start(window, event);
+			}
+			else if (game.getLevel() >= 3 && game.getLives() > 0)
+			{
+				game.end(window, 0);
+				ready = game.start(window, event);
+			}
+			else if (game.getLives() <= 0)
+			{
+				ready = game.start(window, event);
+				game.end(window, 1);
+			}
+		}
 
 		ship.moveShip();
-
-		// draw the ship on top of background 
-		// (the ship from previous frame was erased when we drew background)
 		window.draw(ship.getSprite());
 
 		// moving our missiles we launched
-		for (missileIter = missiles.begin(); missileIter != missiles.end() ; missileIter++)
+		game.moveProjectiles(window);
+		// Testing to see if our ship is hit
+		Sprite shipSprite = ship.getSprite();
+		bool hit = game.isShipHit(shipSprite);
+		if (hit)
 		{
-			window.draw(missileIter->getSprite());
-			missileIter->moveMissile();
-		}
-
-		// moving our missiles we launched
-		for (alienIter = aliens.begin(); alienIter != aliens.end(); alienIter++)
-		{
-			window.draw(alienIter->getSprite());
-			alienIter->moveAlien(0, 1);
-		}
-
-		// testing to see if any of our aliens were hit with any of our missiles
-		for (alienIter = aliens.begin(); alienIter != aliens.end();)
-		{
-			bool hit = false;
-			FloatRect alienBounds = alienIter->getSprite().getGlobalBounds();
-			for (missileIter = missiles.begin(); missileIter != missiles.end();)
-			{
-				FloatRect missileBounds = missileIter->getSprite().getGlobalBounds();
-				if (missileBounds.intersects(alienBounds))
-				{
-					missileIter = missiles.erase(missileIter);
-					hit = true;
-				}
-				else
-					missileIter++;
-			}
-			if (hit)
-			{
-				alienIter = aliens.erase(alienIter);
-				game.subtractAlien();
-			}
+			if(game.getLevel() == 1)
+				game.setupAliens(&alienTexture);
 			else
-				alienIter++;
+				game.setupAliens(&alienTexture2);
 		}
 
+		// moving aliens
+		game.moveAliens(window);
+		// testing to see if any of our aliens were hit with any of our missiles
+		game.checkAliensAndMissiles();
 
-
-
+		game.displayStats(window);
 		// end the current frame; this makes everything that we have 
 		// already "drawn" actually show up on the screen
+		if (game.getNumAliensLeft() == 0)
+		{
+			if (game.getLevel() == 1)
+				game.setLevel(&alienTexture2);
+			else
+				game.setLevel(&alienTexture);
+			ready = false;
+			window.clear();
+		} else if (game.getLives() <= 0)
+		{
+			game.setLevel(&alienTexture);
+			ready = false;
+			window.clear();
+		}
+
 		window.display();
 
 		// At this point the frame we have built is now visible on screen.

@@ -1,45 +1,54 @@
 #pragma once
+#include <iostream>
+#include "Ship.h"
+#include "Alien.h"
+#include "Projectile.h"
+#include <list>
+#include <SFML/Graphics.hpp>
+using namespace std;
+using namespace sf;
 class GameManager
 {
 private:
 	int level;
 	int numLivesLeft;
 	int numAliensLeft;
+	int kills;
+	list<Missile> missiles;
+	list<Bomb> bombs;
+	list<Alien> aliens;
 public:
-	GameManager()
-	{
-		level = 1;
-		numLivesLeft = 3;
-		numAliensLeft = 10;
-	}
-
-	void setLevel(int newLevel)
-	{
-		level = newLevel;
-	}
+	GameManager();
+	void setLevel(Texture*);
 
 	int getLevel()
-	{
-		return level;
-	}
+	{  return level;  }
 
 	void subtractLife()
-	{
+	{ 
 		numLivesLeft--;
+		cout << "Life Lost! ---- Lives left: " << numLivesLeft << endl;
 	}
 
 	int getLives()
-	{
-		return numLivesLeft;
-	}
+	{  return numLivesLeft;  }
 
 	void subtractAlien()
-	{
-		numAliensLeft--;
+	{  
+		numAliensLeft--; 
 	}
 
 	int getNumAliensLeft()
-	{
-		return numAliensLeft;
-	}
+	{  return numAliensLeft;  }
+
+	void setupAliens(Texture*);
+	void launchMissile(Vector2f, Texture*);
+	void bombsAway(int, Texture*);
+	void moveProjectiles(RenderWindow&);
+	void moveAliens(RenderWindow&);
+	void checkAliensAndMissiles();
+	bool isShipHit(Sprite&);
+	void displayStats(RenderWindow&);
+	bool start(RenderWindow&, Event&);
+	void end(RenderWindow&, int);
 };
