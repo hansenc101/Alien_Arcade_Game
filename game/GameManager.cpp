@@ -12,7 +12,6 @@ GameManager::GameManager()
 
 void GameManager::setLevel(Texture* alienTexture)
 {
-	cout << getLevel() << endl;
 	if (numAliensLeft == 0)
 	{
 		level++;
