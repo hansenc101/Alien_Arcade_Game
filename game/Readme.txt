@@ -4,3 +4,5 @@ Bugs:
 
 NOTICE: The kill count will only reset if you lose the game, that way, you can continue playing the game and see how many kills you can rack up
 without losing the game. 
+
+Good job overall; need to comment what's going on in each of the functions
