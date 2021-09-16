@@ -6,4 +6,4 @@ This is an arcade style game written entirely in C++. This was written as one of
 
 === Notice ===
 
-project is several years old and no longer updated. 
+This project is several years old and no longer updated. 
