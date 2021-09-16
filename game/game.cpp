@@ -104,7 +104,7 @@ int main()
 		}
 		else if (game.getLevel() == 2)
 		{
-			if (counter % 60 == 0)
+			if (counter % 20 == 0)
 			{
 				choice = (rand() % (maxValue - minValue + 1)) + minValue;
 				choice2 = (rand() % (maxValue - minValue + 1)) + minValue;

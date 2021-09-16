@@ -51,7 +51,7 @@ public:
 	}
 	void move()
 	{
-		bomb.move(0,2 + DISTANCE);
+		bomb.move(0,4 + DISTANCE);
 	}
 
 	Sprite getSprite()
